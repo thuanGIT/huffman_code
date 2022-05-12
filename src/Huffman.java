@@ -5,11 +5,10 @@ import java.util.Comparator;
 import java.util.Scanner;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.Map.Entry;
 
 class HuffmanNode {
-  int item;
+  int frequency;
   char c;
   HuffmanNode left;
   HuffmanNode right;
@@ -18,7 +17,7 @@ class HuffmanNode {
 // For comparing the nodes
 class ImplementComparator implements Comparator<HuffmanNode> {
   public int compare(HuffmanNode x, HuffmanNode y) {
-    return x.item - y.item;
+    return x.frequency - y.frequency;
   }
 }
 
@@ -27,7 +26,7 @@ public class Huffman {
   public static void printCode(HuffmanNode root, String s) {
     if (root.left == null && root.right == null && Character.isLetter(root.c)) {
 
-      System.out.println(root.c + "   |  " + s);
+      System.out.println(root.c + "    |  " + s);
 
       return;
     }
@@ -94,33 +93,71 @@ public class Huffman {
     char[] charArray = (char[]) processedResult.get("charArray");
     int[] charfreq = (int[]) processedResult.get("charFreq");
 
+    // Default to min heap
+    PriorityQueue<HuffmanNode> q;
+    HuffmanNode root;
+
+    q = createQueue(n, charArray, charfreq);
+    root = recursiveHuffman(q);
+    System.out.println("Char | Huffman code ");
+    System.out.println("-------------------- (Recursive)");
+    printCode(root, "");
+
+    System.out.println();
+
+    q = createQueue(n, charArray, charfreq);
+    root = iterativeHuffman(q);
+    System.out.println("Char | Huffman code ");
+    System.out.println("-------------------- (Iterative)");
+    printCode(root, "");
+  }
+
+  public static PriorityQueue<HuffmanNode> createQueue(int n, char[] charArray, int[] charfreq ) {
     PriorityQueue<HuffmanNode> q = new PriorityQueue<HuffmanNode>(n, new ImplementComparator());
 
     for (int i = 0; i < n; i++) {
       HuffmanNode hn = new HuffmanNode();
 
       hn.c = charArray[i];
-      hn.item = charfreq[i];
+      hn.frequency = charfreq[i];
 
       hn.left = null;
       hn.right = null;
 
       q.add(hn);
     }
+    return q;
+  }
 
+  public static HuffmanNode recursiveHuffman(PriorityQueue<HuffmanNode> q) {
+    if (q.size() < 2) {
+      return q.poll(); // Return the only node in the queue
+    }
+
+    // Create a parent node for 2 lowest frequency nodes
+    HuffmanNode root = new HuffmanNode();
+    root.left = q.poll();
+    root.right = q.poll();
+    root.frequency = root.left.frequency + root.right.frequency;
+    root.c = '_';
+
+    // Add it to the queue
+    q.add(root);
+
+    // Build the tree with the new queue
+    return recursiveHuffman(q);                         
+  }
+
+  public static HuffmanNode iterativeHuffman(PriorityQueue<HuffmanNode> q) {
     HuffmanNode root = null;
-
     while (q.size() > 1) {
-
-      HuffmanNode x = q.peek();
-      q.poll();
-
-      HuffmanNode y = q.peek();
-      q.poll();
+      // Get the two nodes with smallest frequencies
+      HuffmanNode x = q.poll();
+      HuffmanNode y = q.poll();
 
       HuffmanNode f = new HuffmanNode();
 
-      f.item = x.item + y.item;
+      f.frequency = x.frequency + y.frequency;
       f.c = '-';
       f.left = x;
       f.right = y;
@@ -128,10 +165,7 @@ public class Huffman {
 
       q.add(f);
     }
-    System.out.println(" Char | Huffman code ");
-    System.out.println("--------------------");
-    printCode(root, "");
-  
+    return root;
   }
 
   public static void main(String[] args) {  
